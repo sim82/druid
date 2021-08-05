@@ -20,7 +20,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 default-target = "x86_64-pc-windows-msvc"
 
 [features]
-default = ["gtk"]
+default = ["gtk", "im"]
 gtk = ["druid-shell/gtk"]
 image = ["druid-shell/image"]
 svg = ["usvg", "harfbuzz-sys"]
@@ -62,6 +62,7 @@ unicode-segmentation = "1.6.0"
 xi-unicode = "0.3.0"
 fnv = "1.0.7"
 instant = { version = "0.1.6", features = ["wasm-bindgen"] }
+rand = "^0.7"
 
 # Optional dependencies
 im = { version = "15.0.0", optional = true }
