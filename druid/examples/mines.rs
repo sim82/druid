@@ -19,8 +19,8 @@ struct AppState {
     height: i32,
 }
 
-const WIDTH: i32 = 30;
-const HEIGHT: i32 = 30;
+const WIDTH: i32 = 10;
+const HEIGHT: i32 = 10;
 const DIV: i32 = 10;
 
 impl AppState {
@@ -164,7 +164,12 @@ fn make_ui() -> impl Widget<AppState> {
                     if data.mines.contains(&field) {
                         "X".to_string()
                     } else {
-                        format!("{}", data.count_mines(&field))
+                        let c = data.count_mines(&field);
+                        if c > 0 {
+                            format!("{}", c)
+                        } else {
+                            "".to_string()
+                        }
                     }
                 })
                 .center(),
