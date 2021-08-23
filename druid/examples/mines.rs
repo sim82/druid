@@ -1,7 +1,8 @@
 use druid::{
     im::HashSet,
     widget::{prelude::*, Button, Controller, ControllerHost, Either, Flex, Label},
-    AppLauncher, Data, LocalizedString, MouseButton, Widget, WidgetExt, WindowDesc,
+    AppLauncher, Data, LocalizedString, MouseButton, MouseButtons, MouseEvent, Widget, WidgetExt,
+    WindowDesc,
 };
 use rand::{thread_rng, Rng};
 #[derive(Hash, Eq, PartialEq, Debug, Clone, Copy, Data)]
@@ -19,8 +20,8 @@ struct AppState {
     height: i32,
 }
 
-const WIDTH: i32 = 10;
-const HEIGHT: i32 = 10;
+const WIDTH: i32 = 15;
+const HEIGHT: i32 = 15;
 const DIV: i32 = 10;
 
 impl AppState {
@@ -139,22 +140,32 @@ fn make_ui() -> impl Widget<AppState> {
                 button,
                 AllClick::new(move |ctx, data: &mut AppState, _env, event| {
                     // if ctx.
-                    match event {
-                        MouseButton::Left if !data.flagged.contains(&field) => {
+                    let do_flag = event.button == MouseButton::Right
+                        || (event.button == MouseButton::Left && event.mods.ctrl());
+                    if !do_flag {
+                        if !data.flagged.contains(&field) {
                             if data.mines.contains(&field) {
                                 data.revealed = data.revealed.clone().union(data.mines.clone())
                             } else {
                                 data.reveal_inc(&field);
                             }
                         }
-                        MouseButton::Right => {
-                            if !data.flagged.contains(&field) {
-                                data.flagged.insert(field);
-                            } else {
-                                data.flagged.remove(&field);
-                            }
+                    } else {
+                        if !data.flagged.contains(&field) {
+                            data.flagged.insert(field);
+                        } else {
+                            data.flagged.remove(&field);
                         }
-                        _ => (),
+                    }
+                    if !data
+                        .revealed
+                        .clone()
+                        .intersection(data.mines.clone())
+                        .is_empty()
+                    {
+                        println!("BOOOOMMMM");
+                    } else if data.revealed.len() == (WIDTH * HEIGHT) as usize - data.mines.len() {
+                        println!("win!!!1111eleven")
                     }
                 }),
             );
@@ -186,12 +197,12 @@ fn make_ui() -> impl Widget<AppState> {
 
 pub struct AllClick<T> {
     /// A closure that will be invoked when the child widget is clicked.
-    action: Box<dyn Fn(&mut EventCtx, &mut T, &Env, MouseButton)>,
+    action: Box<dyn Fn(&mut EventCtx, &mut T, &Env, &MouseEvent)>,
 }
 
 impl<T: Data> AllClick<T> {
     /// Create a new clickable [`Controller`] widget.
-    pub fn new(action: impl Fn(&mut EventCtx, &mut T, &Env, MouseButton) + 'static) -> Self {
+    pub fn new(action: impl Fn(&mut EventCtx, &mut T, &Env, &MouseEvent) + 'static) -> Self {
         AllClick {
             action: Box::new(action),
         }
@@ -209,7 +220,7 @@ impl<T: Data, W: Widget<T>> Controller<T, W> for AllClick<T> {
                 if ctx.is_active() {
                     ctx.set_active(false);
                     if ctx.is_hot() {
-                        (self.action)(ctx, data, env, mouse_event.button);
+                        (self.action)(ctx, data, env, mouse_event);
                     }
                     ctx.request_paint();
                 }
